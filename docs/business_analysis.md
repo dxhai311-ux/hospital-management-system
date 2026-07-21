@@ -134,3 +134,7 @@ The primary goal of the system is to streamline hospital workflows, reduce manua
 - A prescription may contain multiple medicines.
 - A medicine may appear in multiple prescriptions.
 - Each medical record has one invoice.
+- Each room belongs to one department.
+- A department can have multiple rooms.
+- Each appointment takes place in one room.
+- A room can host multiple appointments.
