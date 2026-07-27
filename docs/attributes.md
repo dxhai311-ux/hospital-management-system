@@ -45,7 +45,7 @@ Stores information required to identify, manage, and assign doctors within the h
 | phone_number | Yes | Primary contact number | One phone number per doctor |
 | work_email | Yes | Official work email address | One work email per doctor |
 | specialty | Yes | Doctor's primary medical specialty | One specialty per doctor |
-| department | Yes | Department where the doctor works | One department per doctor |
+| department_id | Yes | Foreign key referencing the department where the doctor works | References Department.department_id |
 | license_number | Yes | Medical practice license number | Issued by the medical authority |
 | hire_date | Yes | Date the doctor joined the hospital | |
 | employment_status | Yes | Current employment status | e.g. Active, On Leave, Resigned |
@@ -80,7 +80,7 @@ Stores information required to identify and manage hospital rooms.
 | room_id | Yes | Unique room identifier | Assigned by the hospital |
 | room_name | Yes | Room name | |
 | room_type | Yes | Type of room | e.g. Consultation Room, Operating Room, Emergency Room |
-| department | Yes | Department responsible for the room | One department per room |
+| department_id | Yes | Foreign key referencing the department responsible for the room | References Department.department_id |
 | capacity | Yes | Maximum number of patients the room can accommodate | |
 | location | Yes | Room location within the hospital | Floor and building/area |
 | room_status | Yes | Current room status | e.g. Available, Occupied, Maintenance, Closed |
@@ -117,11 +117,11 @@ Stores information about appointments scheduled between patients and doctors.
 | Attribute | Required | Description | Notes |
 |-----------|----------|-------------|-------|
 | appointment_id | Yes | Unique appointment identifier | Assigned by the system |
-| patient | Yes | Patient associated with the appointment | One patient per appointment |
-| doctor | Yes | Doctor assigned to the appointment | One doctor per appointment |
+| patient_id | Yes | Patient associated with the appointment | One patient per appointment |
+| doctor_id | Yes | Doctor assigned to the appointment | One doctor per appointment |
 | appointment_date | Yes | Scheduled appointment date | |
 | appointment_time | Yes | Scheduled appointment time | |
-| room | Yes | Room where the appointment takes place | One room per appointment |
+| room_id | Yes | Room where the appointment takes place | One room per appointment |
 | reason | No | Reason for the appointment | Optional |
 | appointment_status | Yes | Current appointment status | e.g. Scheduled, Completed, Cancelled |
 
@@ -136,7 +136,7 @@ Stores examination and treatment information created after a patient appointment
 | Attribute | Required | Description | Notes |
 |-----------|----------|-------------|-------|
 | medical_record_id | Yes | Unique medical record identifier | Assigned by the system |
-| appointment | Yes | Appointment associated with the medical record | One medical record per appointment |
+| appointment_id | Yes | Foreign key referencing the associated appointment | One medical record per appointment |
 | diagnosis | Yes | Doctor's diagnosis | |
 | symptoms | No | Patient's symptoms | Optional |
 | treatment | No | Treatment provided | Optional |
@@ -154,7 +154,7 @@ Stores prescribed medicines issued by a doctor after a medical examination.
 | Attribute | Required | Description | Notes |
 |-----------|----------|-------------|-------|
 | prescription_id | Yes | Unique prescription identifier | Assigned by the system |
-| medical_record | Yes | Medical record associated with the prescription | One prescription per medical record |
+| medical_record_id | Yes | Medical record associated with the prescription | One prescription per medical record |
 | prescribed_date | Yes | Date the prescription was issued | |
 | instructions | No | Usage instructions for the medicines | Optional |
 | prescription_status | Yes | Current prescription status | e.g. Issued, Cancelled |
@@ -170,7 +170,7 @@ Stores billing information for medical services provided to patients.
 | Attribute | Required | Description | Notes |
 |-----------|----------|-------------|-------|
 | invoice_id | Yes | Unique invoice identifier | Assigned by the system |
-| medical_record | Yes | Medical record associated with the invoice | One invoice per medical record |
+| medical_record_id | Yes | Medical record associated with the invoice | One invoice per medical record |
 | total_amount | Yes | Total amount to be paid | Calculated by the system |
 | issued_date | Yes | Invoice issue date | |
 | invoice_status | Yes | Current invoice status | e.g. Unpaid, Paid, Cancelled |
@@ -186,9 +186,27 @@ Stores payment transactions made by patients for hospital invoices.
 | Attribute | Required | Description | Notes |
 |-----------|----------|-------------|-------|
 | payment_id | Yes | Unique payment identifier | Assigned by the system |
-| invoice | Yes | Invoice associated with the payment | |
+| invoice_id | Yes | Foreign key referencing the associated invoice | |
 | payment_method | Yes | Payment method | e.g. Cash, Credit Card, Bank Transfer |
 | payment_date | Yes | Date of payment | |
 | payment_amount | Yes | Amount paid | |
 | payment_status | Yes | Current payment status | e.g. Successful, Failed, Refunded |
 | transaction_reference | No | External transaction reference | Optional |
+
+## 11. Prescription_Item
+
+### Description
+
+Stores individual medicine items included in a prescription.
+
+### Main Attributes
+
+| Attribute | Required | Description | Notes |
+|-----------|----------|-------------|-------|
+| prescription_item_id | Yes | Unique prescription item identifier | Assigned by the system |
+| prescription_id | Yes | Prescription associated with the medicine item | Foreign key referencing Prescription |
+| medicine_id | Yes | Medicine included in the prescription | Foreign key referencing Medicine |
+| quantity | Yes | Quantity of the prescribed medicine | |
+| dosage | Yes | Dosage instructions | e.g. 1 tablet, 5 mL |
+| frequency | Yes | Frequency of medicine usage | e.g. Once a day, Twice a day |
+| duration | Yes | Treatment duration | e.g. 7 days, 14 days |
