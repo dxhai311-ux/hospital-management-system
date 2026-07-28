@@ -70,7 +70,7 @@ The user roles include:
 - Receptionist
 - Doctor
 - Pharmacist
-- Accountant
+- Cashier
 - Administrator
 
 Patients do not directly access the system.
