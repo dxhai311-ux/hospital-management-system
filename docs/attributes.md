@@ -45,6 +45,7 @@ Stores information required to identify, manage, and assign doctors within the h
 | phone_number | Yes | Primary contact number | One phone number per doctor |
 | work_email | Yes | Official work email address | One work email per doctor |
 | specialty | Yes | Doctor's primary medical specialty | One specialty per doctor |
+| consultation_fee | Yes | Fee charged by the doctor per consultation | Used to calculate invoice total_amount |
 | department_id | Yes | Foreign key referencing the department where the doctor works | References Department.department_id |
 | license_number | Yes | Medical practice license number | Issued by the medical authority |
 | hire_date | Yes | Date the doctor joined the hospital | |
@@ -104,6 +105,7 @@ Stores information required to identify and manage medicines used in the hospita
 | manufacture_date | Yes | Manufacture date | |
 | expiry_date | Yes | Expiration date | |
 | stock_quantity | Yes | Current stock quantity | Updated over time |
+| unit_price | Yes | Price per unit of medicine | Used to calculate prescription/invoice cost |
 | medicine_status | Yes | Current medicine status | e.g. Active, Discontinued, Out of Stock |
 
 ## 6. Appointment
