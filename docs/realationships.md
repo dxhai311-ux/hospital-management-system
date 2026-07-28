@@ -255,30 +255,56 @@ An invoice must have one payment according to the business requirements.
 
 A payment cannot exist without an invoice because every payment is made for exactly one invoice.
 
-## 10. Prescription ↔ Medicine
+## 10. Prescription ↔ Prescription_Item
 
 ### Business Rule
 
-A prescription may contain multiple medicines.
-
-A medicine may appear in multiple prescriptions.
+A prescription may contain multiple medicine items.
+Each prescription item belongs to one prescription.
 
 ### Relationship
 
-Many-to-Many (N:N)
+One-to-Many (1:N)
 
 ### Cardinality
 
-- Prescription → Medicine: 1..N
-- Medicine → Prescription: 0..N
+- Prescription → Prescription_Item: 1..N
+- Prescription_Item → Prescription: 1
 
 ### Participation
 
 - Prescription: Mandatory
-- Medicine: Optional
+- Prescription_Item: Mandatory
 
 ### Reason
 
-A prescription must contain at least one medicine.
+A prescription must contain at least one prescription item, since a prescription with no medicine has no purpose.
 
-A medicine may exist without being included in any prescription because it is managed independently by the hospital.
+A prescription item cannot exist without a prescription because it only has meaning as part of a specific prescription.
+
+## 11. Prescription_Item ↔ Medicine
+
+### Business Rule
+
+A medicine may appear in multiple prescription items.
+Each prescription item refers to exactly one medicine.
+
+### Relationship
+
+One-to-Many (1:N)
+
+### Cardinality
+
+- Medicine → Prescription_Item: 0..N
+- Prescription_Item → Medicine: 1
+
+### Participation
+
+- Medicine: Optional
+- Prescription_Item: Mandatory
+
+### Reason
+
+A medicine may exist without being included in any prescription item, because it is managed independently by the hospital (e.g. newly stocked medicine not yet prescribed).
+
+A prescription item cannot exist without referring to exactly one medicine, since it represents the use of a specific medicine within a prescription.
