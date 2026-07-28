@@ -159,3 +159,16 @@ Payment represents a financial transaction made by a patient to settle an invoic
 - Records payment information for invoices.
 - Supports payment tracking and financial management.
 - Has its own lifecycle (pending, completed, failed, refunded, etc.).
+
+### 11. Prescription_Item
+
+#### Description
+
+Prescription_Item represents an individual medicine entry within a prescription, including the quantity, dosage, and usage instructions for that specific medicine. It resolves the many-to-many relationship between Prescription and Medicine.
+
+#### Why is it an Entity?
+
+- Required to resolve the Many-to-Many relationship between Prescription and Medicine.
+- Has a unique identity (`prescription_item_id`), independent of both Prescription and Medicine.
+- Contains its own business attributes (quantity, dosage, frequency, duration) that describe how a specific medicine is used within a specific prescription — this information does not belong to either Prescription or Medicine alone.
+- Exists only within the context of a prescription, but is still a distinct record that must be individually tracked (e.g. for dispensing by the pharmacist).
