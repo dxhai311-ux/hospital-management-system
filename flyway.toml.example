@@ -1,0 +1,26 @@
+# More information on the parameters can be found here: https://documentation.red-gate.com/flyway/reference/configuration
+
+[environments.hospital]
+url = "jdbc:postgresql://localhost:5432/hospital_management"
+user = "postgres"
+password = "YOUR_PASSWORD"
+# driver =
+# schemas =
+# connectRetries =
+# connectRetriesInterval =
+# initSql =
+# jdbcProperties =
+# resolvers =
+
+[flyway]
+environment = "hospital" # It is recommended to configure environment as a commandline argument. This allows using different environments depending on the caller.
+locations = ["filesystem:./sql"]
+# jarDirs = ["path/to/java/migrations"]
+
+# [environments.build]
+# url = "jdbc:sqlite::memory:"
+# user = "buildUser"
+# password = "buildPassword"
+
+# [flyway.check]
+# buildEnvironment = "build"
