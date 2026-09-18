@@ -14,7 +14,7 @@ password = "YOUR_PASSWORD"
 
 [flyway]
 environment = "hospital" # It is recommended to configure environment as a commandline argument. This allows using different environments depending on the caller.
-locations = ["filesystem:./sql"]
+locations = ["filesystem:./sql/migrations"]
 # jarDirs = ["path/to/java/migrations"]
 
 # [environments.build]
