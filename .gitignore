@@ -1,3 +1,4 @@
 notes/
 flyway.toml
 .env
+__pycache__/
