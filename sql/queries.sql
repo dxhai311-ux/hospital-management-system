@@ -119,7 +119,7 @@ SELECT
 	d.consultation_fee * COUNT(a.appointment_id) AS total
 FROM doctor d
 JOIN appointment a ON d.doctor_id = a.doctor_id
-WHERE DATE_TRUNC('month', a.appointment_date) = '2026-08-01' AND a.appointment_status = 'Completed' 
+WHERE a.appointment_date >= '2026-08-01' AND a.appointment_date < '2026-09-01' 
 GROUP BY d.doctor_id, d.full_name, d.consultation_fee 
 ORDER BY total DESC
 LIMIT 1;
