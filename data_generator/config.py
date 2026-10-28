@@ -1,11 +1,33 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
+def env_int(name, default):
+    return int(os.getenv(name, default))
+
+
 # Data volume
 
+NUM_PATIENTS = env_int("NUM_PATIENTS", 2_000)
+
+# Danh mục cố định
+
 NUM_DEPARTMENTS = 55
-NUM_PATIENTS = 100_000
-NUM_MEDICINES = 1_000
-NUM_DOCTORS = 500
-NUM_ROOMS = 250
-NUM_APPOINTMENTS = 500_000
+NUM_MEDICINES = 200
+
+# Tỉ lệ
+
+APPOINTMENTS_PER_PATIENT = 5
+PATIENTS_PER_DOCTOR = 65
+ROOMS_PER_DOCTOR = 2
+
+# Suy ra từ NUM_PATIENTS
+
+NUM_DOCTORS = NUM_PATIENTS // PATIENTS_PER_DOCTOR
+NUM_ROOMS = NUM_DOCTORS * ROOMS_PER_DOCTOR
+NUM_APPOINTMENTS = NUM_PATIENTS * APPOINTMENTS_PER_PATIENT
 
 
 # Date range
