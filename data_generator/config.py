@@ -63,3 +63,7 @@ INVOICE_PER_RECORD = 1
 # Payment rules
 
 PAYMENT_RATE = 0.85
+
+# Patient rules
+
+EMERGENCY_CONTACT_RATE = 0.80
