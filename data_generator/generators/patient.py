@@ -1,46 +1,24 @@
 import random
-from datetime import date, timedelta
+from datetime import date
 from data_generator.config import EMERGENCY_CONTACT_RATE, NUM_PATIENTS
 from data_generator.logging_config import setup_logging
 from data_generator.database import engine
 import logging
 from sqlalchemy import text
+from data_generator.common import (
+    random_date_between,
+    random_gender,
+    random_phone_number,
+    build_full_name
+)
 
 logger = logging.getLogger(__name__) 
-
-LAST_NAMES = ["Đặng", "Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Phan", "Vũ", "Đỗ", "Bùi", "Lưu", "Tạ", "Đinh", "Trịnh", "Trương"]
-MALE_MIDDLE_NAMES = ["Xuân", "Quang", "Văn", "Hữu", "Minh"]
-FEMALE_MIDDLE_NAMES = ["Thị", "Thúy", "Thu", "Thùy", "Kim"]
-MALE_FIRST_NAMES = ["Hải", "Huy", "Quân", "Hùng", "Nam", "Phúc", "Dương", "Đức", "Dũng", "Long", "Bảo", "Đăng", "Phong", "Sang", "Tuấn", "Đô", "Khôi", "Kiên", "Cường", "Lâm", "Vinh", "Thuận", "Bắc", "Kiệt", "Thành"]
-FEMALE_FIRST_NAMES = ["Hạnh", "La", "Hương", "Ngân", "Mai", "Thảo", "Trang", "Vy", "Linh", "Hà", "Phương", "Quỳnh", "Nhung", "Diễm", "Thủy", "Bích", "Trâm", "Yến", "Huyền", "Duyên", "Thư", "My", "Ngọc", "Diệp", "Lan"]
 
 STREET_NAMES = ["Nguyễn Trãi", "Lê Lợi", "Trần Hưng Đạo", "Phan Đình Phùng", "Nguyễn Thị Minh Khai", "Lý Thường Kiệt", "Nguyễn Văn Cừ", "Trần Phú", "Phạm Ngọc Thạch", "Nguyễn Du"]
 CITIES = ["Hà Nội", "Hồ Chí Minh", "Đà Nẵng", "Hải Phòng", "Cần Thơ", "Nha Trang", "Huế", "Vũng Tàu", "Biên Hòa", "Buôn Ma Thuột"]
 
-def random_gender():
-    return random.choice(["Male", "Female"])
-
-def build_full_name(gender):
-    last_name = random.choice(LAST_NAMES)
-    if gender == "Male":
-        middle_name = random.choice(MALE_MIDDLE_NAMES)
-        first_name = random.choice(MALE_FIRST_NAMES)
-    else:
-        middle_name = random.choice(FEMALE_MIDDLE_NAMES)
-        first_name = random.choice(FEMALE_FIRST_NAMES)
-
-    return f"{last_name} {middle_name} {first_name}"
-
 def random_birth_date():
-    start = date(1935, 1, 1)
-    end = date(2019, 12, 31)
-    total_days = (end - start).days
-    n = random.randint(0, total_days)
-    return start + timedelta(days=n)
-
-def random_phone_number():
-    number = random.randint(10000000, 99999999)
-    return f"09{number}"
+    return random_date_between(date(1935, 1, 1), date(2019, 12, 31))
 
 def random_address():
     house_number = random.randint(1, 200)
