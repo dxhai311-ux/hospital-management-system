@@ -5,6 +5,7 @@ from data_generator.logging_config import setup_logging
 from data_generator.database import engine
 import logging
 from sqlalchemy import text
+from data_generator.common import random_date_between
 
 logger = logging.getLogger(__name__)
 
@@ -61,10 +62,7 @@ ALL_PRODUCTS = [
 ]
 
 def random_manufacture_and_expiry():
-    start = date(2025, 1, 1)
-    end = date(2026, 10, 29)
-    total_days = (end - start).days
-    manufacture_date = start + timedelta(days=random.randint(0, total_days))
+    manufacture_date = random_date_between(date(2025, 1, 1), date(2026, 10, 29))
     shelf_life_days = random.randint(540, 1095)
     expiry_date = manufacture_date + timedelta(days=shelf_life_days)
     return manufacture_date, expiry_date
