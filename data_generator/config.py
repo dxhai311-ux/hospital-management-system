@@ -67,3 +67,7 @@ PAYMENT_RATE = 0.85
 # Patient rules
 
 EMERGENCY_CONTACT_RATE = 0.80
+
+# Appointment reason rules
+
+REASON_RATE = 0.90
