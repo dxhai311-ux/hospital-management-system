@@ -41,10 +41,6 @@ COMPLETED_RATE = 0.80
 CANCELLED_RATE = 0.10
 NO_SHOW_RATE = 0.10
 
-# Medical record rules
-
-MEDICAL_RECORD_RATE = 0.9375
-
 # Prescription rules
 
 PRESCRIPTION_RATE = 0.70
@@ -71,3 +67,7 @@ EMERGENCY_CONTACT_RATE = 0.80
 # Appointment reason rules
 
 REASON_RATE = 0.90
+
+# Medical record note rules
+
+NOTES_RATE = 0.40
