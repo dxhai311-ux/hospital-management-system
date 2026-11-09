@@ -1,7 +1,8 @@
 from data_generator.config import (
     DIRTY_PHONE_RATE, NUM_PATIENTS,
     DIRTY_APPOINTMENT_TIME_RATE, NUM_APPOINTMENTS,
-    DIRTY_RECORD_DATE_RATE
+    DIRTY_RECORD_DATE_RATE,
+    DIRTY_PAYMENT_DATE_RATE
 )
 from sqlalchemy import text
 from data_generator.logging_config import setup_logging
@@ -59,10 +60,28 @@ def dirty_record_dates(connection):
 
     return result.rowcount
 
+def dirty_payment_dates(connection):
+    total = connection.execute(text("SELECT COUNT(*) FROM payment")).scalar_one()
+    dirty_count = int(total * DIRTY_PAYMENT_DATE_RATE)
+
+    result = connection.execute(
+        text("""
+            UPDATE payment
+            SET payment_date = payment_date - 2
+            WHERE payment_id IN (
+                SELECT payment_id FROM payment ORDER BY RANDOM() LIMIT :limit
+            )
+        """),
+        {"limit": dirty_count}
+    )
+
+    return result.rowcount
+
 if __name__ == "__main__":
     setup_logging()
     with engine.begin() as connection:
         #changed = dirty_phone_numbers(connection)
         #changed = dirty_appointment_times(connection)
-        changed = dirty_record_dates(connection)
-    logger.info("Corrupted %s medical record dates", changed)
+        #changed = dirty_record_dates(connection)
+        changed = dirty_payment_dates(connection)
+    logger.info("Corrupted %s payment dates", changed)
