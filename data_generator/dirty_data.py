@@ -1,5 +1,5 @@
 from data_generator.config import (
-    DIRTY_PHONE_RATE, NUM_PATIENTS,
+    DIRTY_PHONE_RATE, DIRTY_DUPLICATE_PATIENT_RATE, NUM_PATIENTS,
     DIRTY_APPOINTMENT_TIME_RATE, DIRTY_STATUS_RATE, NUM_APPOINTMENTS,
     DIRTY_RECORD_DATE_RATE,
     DIRTY_PAYMENT_DATE_RATE
@@ -98,6 +98,24 @@ def dirty_appointment_statuses(connection):
 
     return result.rowcount
 
+def dirty_duplicate_patients(connection):
+    dirty_count = int(NUM_PATIENTS * DIRTY_DUPLICATE_PATIENT_RATE)
+
+    result = connection.execute(
+        text("""
+            INSERT INTO patient (full_name, date_of_birth, gender, phone_number, address,
+            identity_number, emergency_contact_name, emergency_contact_phone)
+            SELECT full_name, date_of_birth, gender, phone_number, address,
+                    NULL, emergency_contact_name, emergency_contact_phone
+            FROM patient
+            ORDER BY RANDOM()
+            LIMIT :limit
+        """),
+        {"limit": dirty_count}
+    )
+
+    return result.rowcount
+
 if __name__ == "__main__":
     setup_logging()
     with engine.begin() as connection:
@@ -105,5 +123,6 @@ if __name__ == "__main__":
         #changed = dirty_appointment_times(connection)
         #changed = dirty_record_dates(connection)
         #changed = dirty_payment_dates(connection)
-        changed = dirty_appointment_statuses(connection)
-    logger.info("Corrupted %s appointment statuses", changed)
+        #changed = dirty_appointment_statuses(connection)
+        changed = dirty_duplicate_patients(connection)
+    logger.info("Inserted %s duplicate patients", changed)
