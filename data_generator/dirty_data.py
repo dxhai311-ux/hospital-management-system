@@ -1,6 +1,6 @@
 from data_generator.config import (
-    DIRTY_PHONE_RATE,
-    NUM_PATIENTS
+    DIRTY_PHONE_RATE, NUM_PATIENTS,
+    DIRTY_APPOINTMENT_TIME_RATE, NUM_APPOINTMENTS
 )
 from sqlalchemy import text
 from data_generator.logging_config import setup_logging
@@ -25,8 +25,25 @@ def dirty_phone_numbers(connection):
 
     return result.rowcount
 
+def dirty_appointment_times(connection):
+    dirty_count = int(NUM_APPOINTMENTS * DIRTY_APPOINTMENT_TIME_RATE)
+
+    result = connection.execute(
+        text("""
+            UPDATE appointment 
+            SET appointment_time = '02:30'
+            WHERE appointment_id IN (
+                SELECT appointment_id FROM appointment ORDER BY RANDOM() LIMIT :limit
+            )
+        """),
+        {"limit": dirty_count}
+    )
+
+    return result.rowcount
+
 if __name__ == "__main__":
     setup_logging()
     with engine.begin() as connection:
-        changed = dirty_phone_numbers(connection)
-    logger.info("Update %s dirty phone number patient", changed)
+        #changed = dirty_phone_numbers(connection)
+        changed = dirty_appointment_times(connection)
+    logger.info("Corrupted %s appointment times", changed)
