@@ -1,6 +1,6 @@
 from data_generator.config import (
     DIRTY_PHONE_RATE, NUM_PATIENTS,
-    DIRTY_APPOINTMENT_TIME_RATE, NUM_APPOINTMENTS,
+    DIRTY_APPOINTMENT_TIME_RATE, DIRTY_STATUS_RATE, NUM_APPOINTMENTS,
     DIRTY_RECORD_DATE_RATE,
     DIRTY_PAYMENT_DATE_RATE
 )
@@ -77,11 +77,33 @@ def dirty_payment_dates(connection):
 
     return result.rowcount
 
+def dirty_appointment_statuses(connection):
+    dirty_count = int(NUM_APPOINTMENTS * DIRTY_STATUS_RATE)
+
+    result = connection.execute(
+        text("""
+            UPDATE appointment
+            SET appointment_status = CASE
+                WHEN RANDOM() < 0.5 THEN 'completed'
+                ELSE 'Complete'
+            END
+            WHERE appointment_id IN (
+                SELECT appointment_id FROM appointment 
+                WHERE appointment_status = 'Completed'
+                ORDER BY RANDOM() LIMIT :limit
+            )
+        """),
+        {"limit": dirty_count}
+    )
+
+    return result.rowcount
+
 if __name__ == "__main__":
     setup_logging()
     with engine.begin() as connection:
         #changed = dirty_phone_numbers(connection)
         #changed = dirty_appointment_times(connection)
         #changed = dirty_record_dates(connection)
-        changed = dirty_payment_dates(connection)
-    logger.info("Corrupted %s payment dates", changed)
+        #changed = dirty_payment_dates(connection)
+        changed = dirty_appointment_statuses(connection)
+    logger.info("Corrupted %s appointment statuses", changed)
