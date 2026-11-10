@@ -116,13 +116,36 @@ def dirty_duplicate_patients(connection):
 
     return result.rowcount
 
+def already_injected(connection): # chỉ có tác dụng khi dựng lại database
+    count = connection.execute(
+        text("SELECT COUNT(*) FROM patient WHERE phone_number NOT LIKE '0%'")
+    ).scalar_one()
+    return count > 0
+
+def inject_dirty_data():
+    with engine.begin() as connection:
+        if already_injected(connection):
+            logger.info("Dirty data already injected, skipping")
+            return
+
+        changed = dirty_phone_numbers(connection)
+        logger.info("Corrupted %s patient phone numbers", changed)
+
+        changed = dirty_appointment_times(connection)
+        logger.info("Corrupted %s appointment times", changed)
+
+        changed = dirty_record_dates(connection)
+        logger.info("Corrupted %s medical record dates", changed)
+
+        changed = dirty_payment_dates(connection)
+        logger.info("Corrupted %s payment dates", changed)
+
+        changed = dirty_appointment_statuses(connection)
+        logger.info("Corrupted %s appointment statuses", changed)
+
+        changed = dirty_duplicate_patients(connection)
+        logger.info("Inserted %s duplicate patients", changed)
+
 if __name__ == "__main__":
     setup_logging()
-    with engine.begin() as connection:
-        #changed = dirty_phone_numbers(connection)
-        #changed = dirty_appointment_times(connection)
-        #changed = dirty_record_dates(connection)
-        #changed = dirty_payment_dates(connection)
-        #changed = dirty_appointment_statuses(connection)
-        changed = dirty_duplicate_patients(connection)
-    logger.info("Inserted %s duplicate patients", changed)
+    inject_dirty_data()
