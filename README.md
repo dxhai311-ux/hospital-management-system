@@ -1,25 +1,114 @@
 # Hospital Management System
 
-A production-style Hospital Management System project built from scratch to learn database design and data engineering, following a real-world software development process — from requirement gathering to a working PostgreSQL database with tested constraints, indexes, views, and business-scenario SQL queries.
+A production-style Hospital Management System built from scratch to learn database design and data engineering, following a real-world process — from requirement gathering to a working PostgreSQL database with tested constraints, indexes, views, synthetic data (clean and dirty), and business-scenario SQL queries.
 
-This project is part of a self-designed Data Engineering learning roadmap, where the Hospital Management System serves as the end-to-end practice vehicle from requirements analysis through eventual ETL / Data Warehouse work.
+It is the hands-on project of a self-designed Data Engineering roadmap, leading toward ETL / Data Warehouse work.
 
-## Status
-
-🚧 In Progress — currently paused after completing Database Design, Database Implementation, and part of SQL Practice. See [Roadmap Progress](#roadmap-progress) below for exact status.
+![Logical ERD](diagrams/logical_erd.png)
 
 ## Tech Stack
 
 - **Database:** PostgreSQL
+- **Migrations:** Flyway
+- **Data generation:** Python (SQLAlchemy)
 - **Client tool:** DBeaver
 - **Version control:** Git / GitHub
 - **Diagramming:** draw.io (crow's foot notation)
 - **Editor:** VS Code
 
+## Getting Started
+
+### Requirements
+
+- PostgreSQL (with an empty database, e.g. `hospital_management`)
+- [Flyway](https://documentation.red-gate.com/flyway) CLI
+- Python 3 (only needed for the data generator)
+
+### 1. Create the schema (Flyway)
+
+Copy `flyway.toml.example` to `flyway.toml` and fill in your own connection details (never commit real passwords; `flyway.toml` is gitignored). The migrations location is `sql/migrations`.
+
+```bash
+flyway info      # lists migrations; "Pending" means not applied yet
+flyway migrate   # applies all pending migrations in version order (V001 → V068)
+```
+
+If a run stops halfway, fix the problem and run `flyway migrate` again — it continues from the first pending migration. (`flyway baseline` is only for a database that already has tables but was never managed by Flyway.)
+
+### 2. Generate data (Python)
+
+Create a `.env` file in the project root (gitignored) with the connection used by the generator:
+
+```
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=hospital_management
+DB_USER=postgres
+DB_PASSWORD=your_password
+```
+
+Run the generators in foreign-key dependency order (parents before children). Each one is idempotent — running it again only adds what is missing:
+
+```bash
+python -m data_generator.generators.department
+python -m data_generator.generators.patient
+python -m data_generator.generators.medicine
+python -m data_generator.generators.doctor
+python -m data_generator.generators.room
+python -m data_generator.generators.appointment
+python -m data_generator.generators.medical_record
+python -m data_generator.generators.prescription
+python -m data_generator.generators.prescription_item
+python -m data_generator.generators.invoice
+python -m data_generator.generators.payment
+```
+
+Volumes and rates (number of patients, share of completed/cancelled appointments, paid invoices...) live in `data_generator/config.py`.
+
+### 3. Inject dirty data (last step)
+
+```bash
+python -m data_generator.dirty_data
+```
+
+This step **must run last**: it edits rows the generators already created (corrupts some phone numbers, appointment times, record and payment dates, status spellings, and adds duplicate patients). Running it earlier would make later generators build on already-corrupted data. A guard skips the step if the data was already injected, but it only protects a rebuild of the database, not partial manual runs.
+
+## Highlights
+
+- **11 normalized tables (3NF)** with deliberate PostgreSQL data types (`DECIMAL` for money, never `FLOAT`).
+- **Constraints with a business reason each:** `NOT NULL`, `UNIQUE` (including composite and 1:1 foreign keys), `CHECK`, `DEFAULT` — all tested by inserting invalid data and confirming it is rejected.
+- **Indexes** only where columns are queried often and not already covered by a `UNIQUE`/`PRIMARY KEY` index.
+- **5 views:** 4 detail views across multiple tables and 1 aggregate view (`monthly_revenue_by_department`).
+- **Synthetic data:** about 2,000 patients and 10,000 appointments, with rules that keep it consistent (every completed appointment has one medical record, every record has one invoice, every paid invoice has one payment).
+- **Dirty data on purpose:** phone numbers, appointment times, record and payment dates, status spellings, and duplicate patients, with the exact counts documented, to practice data cleaning later.
+- **20 business SQL queries** (`sql/queries.sql`) answering realistic hospital questions.
+
+## SQL Practice
+
+`sql/queries.sql` contains business-scenario queries — each answering a realistic question a hospital staff member might ask (e.g. "Which doctor has the highest workload this month?", "Which patients have an invoice but haven't paid yet?"), rather than generic "list all rows" exercises.
+
+Example:
+```sql
+-- Which patients have never completed an appointment?
+SELECT p.patient_id, p.full_name, COUNT(*) AS total_appointment
+FROM appointment a
+JOIN patient p ON a.patient_id = p.patient_id
+GROUP BY p.patient_id
+HAVING COUNT(CASE WHEN LOWER(appointment_status) IN ('completed', 'complete') THEN 1 END) = 0
+ORDER BY total_appointment DESC;
+```
+
+Techniques covered so far: multi-table JOINs (including transitive joins through 5+ tables), `LEFT JOIN ... IS NULL` anti-joins, `GROUP BY` with `HAVING`, conditional aggregation (`COUNT(CASE WHEN ...)`), CTEs, window functions (`RANK`, `LAG`, running totals with `SUM() OVER`), correlated subqueries (`NOT EXISTS`), date arithmetic (`AGE`, `EXTRACT`, `INTERVAL`, `DATE_TRUNC`), and reading `EXPLAIN ANALYZE` plans. Status values with inconsistent spelling in the dirty data are normalized inside the queries.
+
 ## Project Structure
 
 ```
 hospital-management-system/
+├── data_generator/
+│   ├── config.py                 # Volumes and rates (patients, appointments, dirty-data rates...)
+│   ├── database.py               # SQLAlchemy engine (reads .env)
+│   ├── generators/               # One seed_*() per table (11 files, idempotent)
+│   └── dirty_data.py             # Injects realistic data-quality errors (run last)
 ├── diagrams/
 │   ├── conceptual_erd.drawio / .png
 │   ├── logical_erd.drawio / .png
@@ -32,66 +121,22 @@ hospital-management-system/
 │   ├── realationships.md         # Relationship analysis (cardinality, participation)
 │   ├── erd_design.md             # ERD design principles and entity grouping
 │   ├── normalization.md          # 1NF/2NF/3NF analysis for all 11 tables
-│   └── physical_design.md        # PostgreSQL data type decisions per column
+│   ├── physical_design.md        # PostgreSQL data type decisions per column
 ├── notes/                        # Personal study notes (Vietnamese-friendly), one per topic
 ├── sql/
-│   ├── V001–V011                 # CREATE TABLE migrations (11 tables)
-│   ├── V012–V022                 # NOT NULL constraints
-│   ├── V023–V029                 # UNIQUE constraints (including composite)
-│   ├── V030–V038                 # CHECK constraints
-│   ├── V039–V045                 # DEFAULT values
-│   ├── V046–V051                 # Indexes
-│   ├── V052–V057                 # Views
-│   ├── V058–V068                 # Sample data inserts
-│   └── queries.sql               # SQL Practice — business-scenario queries (Q1, Q2, ...)
+│   ├── migrations/
+│   │   ├── V001–V011             # CREATE TABLE migrations (11 tables)
+│   │   ├── V012–V022             # NOT NULL constraints
+│   │   ├── V023–V029             # UNIQUE constraints (including composite)
+│   │   ├── V030–V038             # CHECK constraints
+│   │   ├── V039–V045             # DEFAULT values
+│   │   ├── V046–V051             # Indexes
+│   │   ├── V052–V057             # Views
+│   │   └── V058–V068             # Sample data inserts and a constraint fix
+│   └── queries.sql               # SQL Practice — business-scenario queries (Q1–Q20)
+├── flyway.toml.example           # Flyway connection template (real flyway.toml is gitignored)
 └── README.md
 ```
-
-## Database Design
-
-The system models a single-hospital, single-branch Hospital Management System covering:
-
-- **Patient Management** — patient records, contact info
-- **Doctor Management** — doctors, specialties, department assignment
-- **Department & Room Management** — hospital departments and physical rooms
-- **Appointment Management** — scheduling between patients, doctors, and rooms
-- **Medical Record Management** — diagnosis, symptoms, treatment per appointment
-- **Prescription Management** — prescriptions and prescribed medicine items
-- **Medicine Management** — medicine catalog and stock
-- **Billing** — invoices and payments
-
-**11 entities**, normalized to 3NF, with PostgreSQL-specific physical data types (e.g. `VARCHAR` vs `TEXT` chosen deliberately per column, `DECIMAL` for all monetary values, never `FLOAT`).
-
-See `diagrams/logical_erd.png` and `diagrams/physical_erd.png` for the full entity-relationship diagrams.
-
-## Database Implementation
-
-All schema changes are tracked as sequential, Flyway-style migrations (`V0XX__description.sql`) in `sql/`, following the principle of never modifying a migration once it has been "released" — every later change (adding a constraint, a default value, an index) is a new migration file, never an edit to an old one.
-
-- **Constraints:** `NOT NULL`, `UNIQUE` (including composite keys), `CHECK`, and `DEFAULT` values across all 11 tables — each backed by a documented business reason (e.g. `UNIQUE` on a 1:1 relationship's foreign key, since a foreign key alone does not prevent duplicate rows).
-- **Indexes:** added only on columns that are both frequently queried and not already covered by a `UNIQUE`/`PRIMARY KEY` index, based on realistic query patterns (e.g. filtering appointments by doctor or date), not on every column.
-- **Views:** 5 views — 4 detail views joining across multiple tables (e.g. `appointment_details`, `prescription_item_details`) and 1 aggregate view (`monthly_revenue_by_department`) using `GROUP BY`, `DATE_TRUNC`, and `SUM`.
-- **Sample data:** inserted across all 11 tables in correct foreign-key dependency order, deliberately including edge cases (optional fields left `NULL`, a patient with multiple appointments, a prescription with multiple medicines) to exercise the constraints and views with realistic data.
-- **Constraint testing:** deliberately inserted invalid data (duplicate unique values, invalid foreign keys, out-of-range values, missing required fields) to confirm every constraint actually rejects bad data, not just exists on paper.
-
-## SQL Practice
-
-`sql/queries.sql` contains business-scenario SQL queries — each answering a realistic question a hospital staff member might ask (e.g. "Which doctor has the highest workload this month?", "Which patients have an invoice but haven't paid yet?"), rather than generic "list all rows" exercises.
-
-Example:
-```sql
--- Which patients have an invoice but have never made a payment?
-SELECT p.full_name, p.identity_number
-FROM invoice i
-JOIN medical_record mr ON mr.medical_record_id = i.medical_record_id
-JOIN appointment a ON a.appointment_id = mr.appointment_id
-JOIN patient p ON p.patient_id = a.patient_id
-WHERE NOT EXISTS (
-    SELECT 1 FROM payment pm WHERE pm.invoice_id = i.invoice_id
-);
-```
-
-Techniques covered so far: multi-table JOINs (including transitive joins through 5+ tables), `GROUP BY` with aggregates, `RANK() OVER` window functions for correctly handling ties in "top N" queries, correlated subqueries (`NOT EXISTS`), and date arithmetic (`AGE`, `EXTRACT`, `INTERVAL`, `DATE_TRUNC`).
 
 ## Roadmap Progress
 
@@ -101,13 +146,14 @@ Techniques covered so far: multi-table JOINs (including transitive joins through
 | Business Analysis | ✅ Done |
 | Database Design (ERD, Normalization, Physical Design) | ✅ Done |
 | Database Implementation (Constraints, Indexes, Views, Sample Data, Testing) | ✅ Done |
-| SQL Practice (target: 40–60 queries) | 🚧 In Progress — 10 queries done |
-| Documentation | 🚧 In Progress — this README |
+| Synthetic data generation (clean + dirty data) | ✅ Done |
+| SQL Practice (target: 40–60 queries) | 🚧 In Progress — 20 queries done |
+| Documentation | 🚧 In Progress — data rules doc pending |
 | ETL / Data Warehouse / Star Schema | ⬜ Not started |
 
 ## Lessons Learned
 
-- Designing constraints in the correct order (`NOT NULL` → `UNIQUE` → `CHECK` → `DEFAULT`) across all tables at once, rather than table-by-table, made it much easier to stay consistent and catch cross-table inconsistencies (e.g. same-purpose columns using different `VARCHAR` lengths).
-- A foreign key alone does not enforce a 1:1 relationship — it only checks that the referenced row exists, not that it hasn't already been used elsewhere. A 1:1 relationship needs `FOREIGN KEY` + `UNIQUE` together on the child table.
-- `DATE_TRUNC()` on a column disables index usage on that column (the index is sorted by the raw value, not the computed one), while a range query (`>=` / `<`) can use the index — a real trade-off between readability and performance, not just a style choice.
-- Sample data should be written to deliberately exercise edge cases already reasoned about during design (e.g. a patient with two appointments on different days, to confirm why `appointment_id` needed to be a surrogate key rather than a composite key) — not just filled in for volume.
+- A foreign key alone does not enforce a 1:1 relationship — it needs `FOREIGN KEY` + `UNIQUE` together on the child table.
+- `DATE_TRUNC()` on a column disables index usage on that column, while a range query (`>=` / `<`) can use the index.
+- Design constraints in the right order (`NOT NULL` → `UNIQUE` → `CHECK` → `DEFAULT`) across all tables at once to stay consistent.
+- Generate clean data first, then inject dirty data as a separate last step, so errors stay controlled and countable.
