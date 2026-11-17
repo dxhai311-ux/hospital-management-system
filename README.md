@@ -36,6 +36,14 @@ flyway migrate   # applies all pending migrations in version order (V001 → V06
 If a run stops halfway, fix the problem and run `flyway migrate` again — it continues from the first pending migration. (`flyway baseline` is only for a database that already has tables but was never managed by Flyway.)
 
 ### 2. Generate data (Python)
+Create and activate a virtual environment, then install the dependencies:
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate          # Windows (PowerShell: .\.venv\Scripts\Activate.ps1)
+# source .venv/bin/activate     # Linux / macOS
+pip install -r requirements.txt
+```
 
 Create a `.env` file in the project root (gitignored) with the connection used by the generator:
 
