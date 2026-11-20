@@ -3,6 +3,10 @@ import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.engine import URL
+import random
+from data_generator.config import RANDOM_SEED
+
+random.seed(RANDOM_SEED) # Fixed seed so every run generates the same data
 
 load_dotenv()
 
