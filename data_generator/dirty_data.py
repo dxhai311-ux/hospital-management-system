@@ -5,6 +5,7 @@ from data_generator.config import (
     DIRTY_PAYMENT_DATE_RATE
 )
 from sqlalchemy import text
+from data_generator.config import RANDOM_SEED
 from data_generator.logging_config import setup_logging
 import logging
 from data_generator.database import engine
@@ -127,6 +128,11 @@ def inject_dirty_data():
         if already_injected(connection):
             logger.info("Dirty data already injected, skipping")
             return
+
+        connection.execute(
+            text("SELECT setseed(:seed)"),
+            {"seed": RANDOM_SEED / 100},
+        )
 
         changed = dirty_phone_numbers(connection)
         logger.info("Corrupted %s patient phone numbers", changed)
