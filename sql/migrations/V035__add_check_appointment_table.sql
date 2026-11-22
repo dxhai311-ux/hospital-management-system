@@ -4,4 +4,4 @@
 -- Date : 2026-08-15
 
 ALTER TABLE appointment 
-    ADD CONSTRAINT chk_appointment_date CHECK (appointment_date >= CURRENT_DATE);
+    ADD CONSTRAINT chk_appointment_date CHECK (appointment_date >= '2020-01-01');
