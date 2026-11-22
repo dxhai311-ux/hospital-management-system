@@ -20,66 +20,31 @@ It is the hands-on project of a self-designed Data Engineering roadmap, leading 
 
 ### Requirements
 
-- PostgreSQL (with an empty database, e.g. `hospital_management`)
-- [Flyway](https://documentation.red-gate.com/flyway) CLI
-- Python 3 (only needed for the data generator)
+- Python 3.13
+- PostgreSQL
+- [Flyway](https://flywaydb.org/) command line (added to PATH)
 
-### 1. Create the schema (Flyway)
+### Setup
 
-Copy `flyway.toml.example` to `flyway.toml` and fill in your own connection details (never commit real passwords; `flyway.toml` is gitignored). The migrations location is `sql/migrations`.
+1. Create an empty PostgreSQL database (for example `hospital_management`).
+2. Create a virtual environment and install packages:
+   ```
+   python -m venv .venv
+   .venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+3. Copy `flyway.toml.example` to `flyway.toml` and fill in your database connection.
+4. Create a `.env` file with `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` (same database as `flyway.toml`).
 
-```bash
-flyway info      # lists migrations; "Pending" means not applied yet
-flyway migrate   # applies all pending migrations in version order (V001 → V068)
-```
-
-If a run stops halfway, fix the problem and run `flyway migrate` again — it continues from the first pending migration. (`flyway baseline` is only for a database that already has tables but was never managed by Flyway.)
-
-### 2. Generate data (Python)
-Create and activate a virtual environment, then install the dependencies:
-
-```bash
-python -m venv .venv
-.venv\Scripts\activate          # Windows (PowerShell: .\.venv\Scripts\Activate.ps1)
-# source .venv/bin/activate     # Linux / macOS
-pip install -r requirements.txt
-```
-
-Create a `.env` file in the project root (gitignored) with the connection used by the generator:
+### Run
 
 ```
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=hospital_management
-DB_USER=postgres
-DB_PASSWORD=your_password
+python rebuild.py
 ```
 
-Run the generators in foreign-key dependency order (parents before children). Each one is idempotent — running it again only adds what is missing:
+This runs Flyway clean and migrate, the 11 generators in foreign key order, then `dirty_data`. Type `YES` when asked.
 
-```bash
-python -m data_generator.generators.department
-python -m data_generator.generators.patient
-python -m data_generator.generators.medicine
-python -m data_generator.generators.doctor
-python -m data_generator.generators.room
-python -m data_generator.generators.appointment
-python -m data_generator.generators.medical_record
-python -m data_generator.generators.prescription
-python -m data_generator.generators.prescription_item
-python -m data_generator.generators.invoice
-python -m data_generator.generators.payment
-```
-
-Volumes and rates (number of patients, share of completed/cancelled appointments, paid invoices...) live in `data_generator/config.py`.
-
-### 3. Inject dirty data (last step)
-
-```bash
-python -m data_generator.dirty_data
-```
-
-This step **must run last**: it edits rows the generators already created (corrupts some phone numbers, appointment times, record and payment dates, status spellings, and adds duplicate patients). Running it earlier would make later generators build on already-corrupted data. A guard skips the step if the data was already injected, but it only protects a rebuild of the database, not partial manual runs.
+> **Warning:** `rebuild.py` deletes everything in the database before rebuilding it. Never run it on real data.
 
 ## Highlights
 
