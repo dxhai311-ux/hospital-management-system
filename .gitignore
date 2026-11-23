@@ -3,3 +3,4 @@ flyway.toml
 .env
 __pycache__/
 .venv/
+dirty_data_counts.json
