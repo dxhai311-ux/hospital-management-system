@@ -23,14 +23,14 @@ GENERATORS = [
 ]
 
 def run(command):
-    print(f"Đang chạy : {' '.join(command)}")
+    print(f"Running : {' '.join(command)}")
     try:
         subprocess.run(command, check=True)
     except subprocess.CalledProcessError as error:
-        print("Lỗi : ", error)
+        print("Error : ", error)
         sys.exit(1)
     except FileNotFoundError:
-        print(f"Lỗi chưa cài đặt : {command[0]}")
+        print(f"Command not found : {command[0]}")
         sys.exit(1)
     
 def run_generators():
@@ -41,19 +41,19 @@ def run_generators():
 def check_tools():
     for tool in REQUIRED_TOOLS:
         if shutil.which(tool) is None:
-            print(f"Lỗi chưa cài đặt : {tool}")
+            print(f"Tool not installed : {tool}")
             sys.exit(1)
 
 def check_files():
     for file in REQUIRED_FILES:
         if not os.path.exists(file):
-            print(f"Lỗi chưa có file : {file}")
+            print(f"Missing file : {file}")
             sys.exit(1)
 
 def check_packages():
     for package in REQUIRED_PACKAGES:
         if importlib.util.find_spec(package) is None:
-            print(f"Lỗi chưa cài thư viện : {package}")
+            print(f"Package not installed : {package}")
             sys.exit(1)
 
 def rebuild():
@@ -67,9 +67,9 @@ if __name__ == "__main__":
     check_tools()
     check_packages()
     check_files()
-    print("Khi chạy có thể xóa toàn bộ database nên bạn cần xác nhận!")
-    answer = input("Gõ YES để tiếp tục, gõ NO để dừng : ").strip().upper()
+    print("This will delete ALL data in the database. Confirmation required!")
+    answer = input("Type YES to continue, NO to cancel : ").strip().upper()
     if answer == 'YES':
         rebuild()
     else:
-        print("Đã hủy !")
+        print("Cancelled!")
