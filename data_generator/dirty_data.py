@@ -1,3 +1,4 @@
+import json
 from data_generator.config import (
     DIRTY_PHONE_RATE, DIRTY_DUPLICATE_PATIENT_RATE, NUM_PATIENTS,
     DIRTY_APPOINTMENT_TIME_RATE, DIRTY_STATUS_RATE, NUM_APPOINTMENTS,
@@ -124,6 +125,8 @@ def already_injected(connection): # chỉ có tác dụng khi dựng lại datab
     return count > 0
 
 def inject_dirty_data():
+    injected_count = {}
+
     with engine.begin() as connection:
         if already_injected(connection):
             logger.info("Dirty data already injected, skipping")
@@ -136,21 +139,30 @@ def inject_dirty_data():
 
         changed = dirty_phone_numbers(connection)
         logger.info("Corrupted %s patient phone numbers", changed)
+        injected_count['phone'] = changed
 
         changed = dirty_appointment_times(connection)
         logger.info("Corrupted %s appointment times", changed)
+        injected_count['appointment_time'] = changed
 
         changed = dirty_record_dates(connection)
         logger.info("Corrupted %s medical record dates", changed)
+        injected_count['record_date'] = changed
 
         changed = dirty_payment_dates(connection)
         logger.info("Corrupted %s payment dates", changed)
+        injected_count['payment_date'] = changed
 
         changed = dirty_appointment_statuses(connection)
         logger.info("Corrupted %s appointment statuses", changed)
+        injected_count['appointment_status'] = changed
 
         changed = dirty_duplicate_patients(connection)
         logger.info("Inserted %s duplicate patients", changed)
+        injected_count['duplicate_patient'] = changed
+
+    with open('dirty_data_counts.json', 'w') as f:
+        json.dump(injected_count, f, indent=2)
 
 if __name__ == "__main__":
     setup_logging()
