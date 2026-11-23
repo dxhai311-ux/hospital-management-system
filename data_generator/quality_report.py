@@ -1,6 +1,8 @@
 import pandas as pd
 from data_generator.database import engine
 import datetime
+import json
+import sys
 
 def read_table(table):
     return pd.read_sql(f"SELECT * FROM {table}", engine)
@@ -43,10 +45,43 @@ def count_duplicate_patients():
     is_duplicate = df.duplicated(subset=['full_name', 'phone_number', 'date_of_birth', 'address'], keep='first')
     return is_duplicate.sum()
 
+def load_injected_counts():
+    try:
+        with open('dirty_data_counts.json') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        print('No dirty data file yet')
+        sys.exit(1)
+
+def make_row(table, error_type, injected, found):
+    return {
+        "Table": table,
+        "Error_Type": error_type,
+        "Injected": injected,
+        "Found": found
+    }
+
+def build_report():
+    injected = load_injected_counts()
+
+    rows = [
+        make_row('patient', 'Invalid phone numbers',
+                 injected['phone'], count_bad_phones()),
+        make_row('appointment', 'Appointment times outside working hours',
+                 injected['appointment_time'], count_bad_appointment_times()),
+        make_row('appointment', 'Invalid appointment statuses',
+                 injected['appointment_status'], count_bad_appointment_statuses()),
+        make_row('medical_record', 'Record dates not matching appointment date',
+                 injected['record_date'], count_bad_record_dates()),
+        make_row('payment', 'Payment dates not matching invoice date',
+                 injected['payment_date'], count_bad_payment_dates()),
+        make_row('patient', 'Duplicate patients',
+                 injected['duplicate_patient'], count_duplicate_patients()),
+    ]
+
+    return pd.DataFrame(rows)
+
+
 if __name__ == "__main__":
-    print_result('Invalid phone numbers', count_bad_phones())
-    print_result('Appointment times outside working hours', count_bad_appointment_times())
-    print_result('Invalid appointment statuses', count_bad_appointment_statuses())
-    print_result('Medical record dates not matching appointment date', count_bad_record_dates())
-    print_result('Payment dates not matching invoice date', count_bad_payment_dates())
-    print_result('Duplicate patients', count_duplicate_patients())
+    report = build_report()
+    print(report.to_string(index=False))
