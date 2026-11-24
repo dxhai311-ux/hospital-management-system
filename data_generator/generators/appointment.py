@@ -9,13 +9,16 @@ from data_generator.config import (
     CANCELLED_RATE,
     NO_SHOW_RATE,
     REASON_RATE,
-    NUM_APPOINTMENTS
+    NUM_APPOINTMENTS,
+    REFERENCE_DATE
 )
 from datetime import date, timedelta, time
 from data_generator.common import random_date_between
 import random
 
 logger = logging.getLogger(__name__)
+
+TODAY = date.fromisoformat(REFERENCE_DATE)
 
 APPOINTMENT_REASONS = [
     "Khám sức khỏe định kỳ",
@@ -61,7 +64,7 @@ def get_patients_ids(connection):
 
 def random_appointment_date():
     start = date.fromisoformat(DATA_START_DATE)
-    end = date.today() + timedelta(days=FUTURE_APPOINTMENT_MONTHS * 30)
+    end = TODAY + timedelta(days=FUTURE_APPOINTMENT_MONTHS * 30)
     return random_date_between(start, end)
 
 def random_appointment_time():
@@ -70,7 +73,7 @@ def random_appointment_time():
     return time(hour, minute)
 
 def random_appointment_status(appointment_date):
-    if appointment_date >= date.today():
+    if appointment_date >= TODAY:
         return "Scheduled"
     else:
         return random.choices(
