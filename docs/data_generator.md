@@ -41,6 +41,10 @@ Run last. It injects these errors and logs the exact counts:
 | Corrupted appointment statuses | 200 |
 | Duplicate patients | 20 |
 
+Note: the quality report finds 101 invalid phone numbers, not 100. Duplicate patients
+are copied after the phone corruption, so a copy of a corrupted patient also has a
+corrupted phone.
+
 ## Reproducibility
 
 `RANDOM_SEED` in `config.py` fixes Python randomness. `dirty_data.py` also calls PostgreSQL `setseed`, so SQL `RANDOM()` is fixed too. Running `python rebuild.py` twice gives identical data.
