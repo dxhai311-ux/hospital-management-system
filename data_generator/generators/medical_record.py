@@ -41,13 +41,31 @@ GENERAL_DISEASES = [
     ("Dị ứng da", "Ngứa, nổi mẩn đỏ", "Thuốc kháng histamin, tránh tác nhân gây dị ứng"),
 ]
 
-MEDICAL_NOTES = [
-    "Bệnh nhân cần theo dõi huyết áp thường xuyên",
-    "Tái khám sau 1 tuần nếu triệu chứng không giảm",
-    "Bệnh nhân có tiền sử dị ứng thuốc, cần lưu ý khi kê đơn",
-    "Hướng dẫn bệnh nhân uống thuốc đúng giờ",
-    "Khuyên bệnh nhân nghỉ ngơi và uống nhiều nước",
-    "Cần làm thêm xét nghiệm máu ở lần khám sau",
+OBSERVATION_PARTS = [
+    "Huyết áp và mạch trong giới hạn bình thường.",
+    "Huyết áp hơi cao so với lần khám trước.",
+    "Khám lâm sàng chưa thấy dấu hiệu bất thường khác.",
+    "Bệnh nhân tỉnh táo, tiếp xúc tốt.",
+    "Thể trạng trung bình, không sốt tại thời điểm khám.",
+    "Bệnh nhân có tiền sử dị ứng thuốc, cần lưu ý khi kê đơn.",
+]
+
+ADVICE_PARTS = [
+    "Khuyên bệnh nhân nghỉ ngơi và uống nhiều nước.",
+    "Hướng dẫn bệnh nhân uống thuốc đúng giờ sau bữa ăn.",
+    "Hạn chế đồ ăn cay nóng và rượu bia trong thời gian điều trị.",
+    "Ngủ đủ giấc, tránh thức khuya.",
+    "Theo dõi nhiệt độ và huyết áp tại nhà mỗi ngày.",
+    "Tránh làm việc nặng trong vài ngày tới.",
+]
+
+FOLLOW_UP_PARTS = [
+    "Tái khám sau 1 tuần nếu triệu chứng không giảm.",
+    "Tái khám ngay nếu xuất hiện sốt cao hoặc đau tăng.",
+    "Cần làm thêm xét nghiệm máu ở lần khám sau.",
+    "Hẹn tái khám sau 2 tuần để đánh giá lại.",
+    "Tái khám định kỳ mỗi tháng.",
+    "Nếu ổn định, tiếp tục theo dõi tại nhà.",
 ]
 
 def get_completed_appointments_without_record(connection):
@@ -65,9 +83,14 @@ def random_disease(reason):
     else:
         return random.choice(GENERAL_DISEASES)
 
-def random_notes():
+def random_notes(diagnosis, symptoms, treatment):
     if random.random() < NOTES_RATE:
-        return random.choice(MEDICAL_NOTES)
+        base =  f"Bệnh nhân khám vì {symptoms}. Chẩn đoán: {diagnosis}. Hướng điều trị: {treatment}."
+        all_parts = OBSERVATION_PARTS + ADVICE_PARTS + FOLLOW_UP_PARTS
+        extra_count = random.randint(0, 3)
+        extras = random.sample(all_parts, extra_count)
+        return " ".join([base] + extras)
+        
     else:
         return None
 
@@ -80,7 +103,7 @@ def build_record_data(appointment):
         "diagnosis": diagnosis,
         "symptoms": symptoms,
         "treatment": treatment,
-        "notes": random_notes(),
+        "notes": random_notes(diagnosis, symptoms, treatment),
     }
 
 def seed_medical_records():
