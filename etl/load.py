@@ -1,29 +1,15 @@
+from pathlib import Path
 from data_generator.database import engine
 from sqlalchemy import text
 
-LOAD_DIM_DEPARTMENT = """
-    INSERT INTO dw.dim_department (
-	    department_id,
-	    department_name,
-	    location,
-	    department_status
-    )
-    SELECT 
-	    department_id,
-	    department_name,
-	    location,
-	    department_status
-    FROM public.department
-    ON CONFLICT (department_id)
-    DO UPDATE SET 
-	    department_name = EXCLUDED.department_name,
-	    location = EXCLUDED.location,
-	    department_status = EXCLUDED.department_status;
-"""
+SQL_DIR = Path("sql/etl")
+LOADS = ["load_dim_department", "load_dim_doctor"]
 
-def load_dim_department():
+def run_load(name):
+    sql = (SQL_DIR / f"{name}.sql").read_text(encoding="utf-8")
     with engine.begin() as connection:
-        connection.execute(text(LOAD_DIM_DEPARTMENT))
+        connection.execute(text(sql))
 
 if __name__ == "__main__":
-    load_dim_department()
+    for name in LOADS:
+        run_load(name)
